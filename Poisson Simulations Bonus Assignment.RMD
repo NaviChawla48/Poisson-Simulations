@@ -1,0 +1,59 @@
+---
+title: "Poisson Processes Exercises"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Exercise 1
+
+In the bike exercise above, suppose that 75% of all cyclists stop at the water fountain and stay for a normally distributed amount of time with mean 5 minutes and standard deviation 1 minute. What is the expected number of cyclists at the water fountain at any given time?
+
+```{r}
+pois.sim=function(t=40,lambda=1/2)
+{N <- rpois(1, lambda*t)
+unifs <- runif(N,0,t)
+arrivals <- sort(unifs)
+return(arrivals)
+}
+
+pois.sim.fountain=function(t=60,lambda=1/3)
+{N <- rpois(1, lambda*t)
+unifs <- runif(N,0,t)
+arrivals <- sort(unifs)
+stops=sample(c(0,1),length(arrivals),replace=T,prob=c(0.25,0.75))
+fountain.time=rnorm(length(arrivals),5,1)
+departure=arrivals+fountain.time*stops
+return(data.frame(arrivals,stops,fountain.time,departure))
+}
+
+res.vec=0
+for(i in 1:1000){
+sim=pois.sim.fountain()
+check.time=runif(1,0,60)
+res.vec[i]=sum(sim$arrivals<=check.time & sim$departure>=check.time & sim$stops==1)
+}
+
+mean(res.vec)
+hist(res.vec)
+```
+
+#Exercise 2
+
+Goals occur in a soccer game according to a Poisson Process. The average total number of goals scored in a 90-minute match is 2.68. Assume that two teams are evenly matched. Use a set of simulations to estimate the probability both teams will score the same number of goals. Does this agree with the theoretical result?
+
+```{r}
+res.vec=0
+for(i in 1:10000){
+team.a=rpois(1,2.68/2)
+team.b=rpois(1,2.68/2)
+res.vec[i]=ifelse(team.a==team.b,1,0)
+}
+
+mean(res.vec)
+
+#theoretical
+sum(dpois(0:20,2.68/2)^2)
+```
